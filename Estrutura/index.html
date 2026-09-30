@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoMonitor Industrial + IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app" style="position:relative;">
+
+  
+
+  <aside class="side">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div><div class="brand-name">EcoMonitor</div><div class="brand-sub">Industrial</div></div>
+    </div>
+    <nav id="navList">
+      <button data-view="painel" class="active" onclick="setView('painel')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Painel
+      </button>
+      <button data-view="mural" onclick="setView('mural')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10"/><path d="M7 12h10"/><path d="M7 16h4"/></svg>
+        Mural de Avisos
+      </button>
+      <button data-view="alertas" onclick="setView('alertas')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l9 16H3z"/><path d="M12 9v5"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>
+        Alertas
+        <span class="badge" id="alertBadge">0</span>
+      </button>
+      <button data-view="relatorios" onclick="setView('relatorios')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19h16"/><rect x="6" y="10" width="3" height="7"/><rect x="11" y="6" width="3" height="11"/><rect x="16" y="13" width="3" height="4"/></svg>
+        Relatórios
+      </button>
+      <button data-view="config" onclick="setView('config')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.9 7.9 0 000-2l2-1.6-2-3.4-2.4.6a8 8 0 00-1.7-1L14.7 3h-4.6l-.6 2.6a8 8 0 00-1.7 1l-2.4-.6-2 3.4L5.4 11a7.9 7.9 0 000 2l-2 1.6 2 3.4 2.4-.6a8 8 0 001.7 1l.6 2.6h4.6l.6-2.6a8 8 0 001.7-1l2.4.6 2-3.4z"/></svg>
+        Configurações
+      </button>
+    </nav>
+    <div class="side-foot">
+      <div class="side-foot-top">
+        <div class="side-avatar" id="sideAvatar">–</div>
+        <div><b id="sideUser">—</b><small>Linha 3 · Produção</small></div>
+        <button id="logout" onclick="logout()">Sair</button>
+      </div>
+      <div class="lock-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+        Sessão segura
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ===== VIEW: PAINEL ===== -->
+    <section class="view active" data-view="painel">
+      <div class="topbar">
+        <div><h1>Painel de consumo</h1><p id="clock">—</p></div>
+        <div class="live"><span class="live-dot"></span>Dados ao vivo</div>
+      </div>
+
+      <!-- BARRA DE PESQUISA IA -->
+      <div class="panel" style="margin-bottom: 18px; padding-bottom: 12px;">
+        <div class="panel-head" style="margin-bottom:12px;">
+          <h2>Assistente Inteligente <span class="kpi-tag tag-ai" style="margin-left: 6px;">IA</span></h2>
+        </div>
+        <div class="ai-chat-box" id="ai-output">
+          Olá! Sou o assistente da Linha 3. Tente me pedir um <b>resumo</b>, ou pergunte sobre <b>economia</b>, <b>alertas</b> e <b>picos de energia</b>.
+        </div>
+        <div style="display:flex; gap:10px;">
+          <input type="text" id="ai-input" class="input-field" placeholder="Ex: Me dê um resumo geral" onkeypress="handleAIPress(event)">
+          <button class="btn-primary" style="width: auto; white-space: nowrap;" onclick="askAI()">Perguntar</button>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi" id="kpi-energy">
+          <div class="kpi-top"><span class="kpi-label">Energia agora</span><span class="kpi-tag tag-ok" id="tag-energy">Normal</span></div>
+          <div class="kpi-val mono"><span id="val-energy">42.8</span> <span>kWh</span></div>
+          <div class="kpi-delta" id="delta-energy">—</div>
+        </div>
+        <div class="kpi" id="kpi-water">
+          <div class="kpi-top"><span class="kpi-label">Consumo de água</span><span class="kpi-tag tag-warn" id="tag-water">Atenção</span></div>
+          <div class="kpi-val mono"><span id="val-water">118</span> <span>L/h</span></div>
+          <div class="kpi-delta" id="delta-water">—</div>
+        </div>
+        <div class="kpi" id="kpi-temp">
+          <div class="kpi-top"><span class="kpi-label">Temp. do painel</span><span class="kpi-tag tag-ok" id="tag-temp">Normal</span></div>
+          <div class="kpi-val mono"><span id="val-temp">34</span> <span>°C</span></div>
+          <div class="kpi-delta" id="delta-temp">—</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-label">Economia no mês</span><span class="kpi-tag tag-ok">+12%</span></div>
+          <div class="kpi-val mono">R$ 1.240</div>
+          <div class="kpi-delta">Comparado ao mês anterior</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Energia × água — tempo real</h2>
+            <div class="legend">
+              <span><i class="dot" style="background:var(--energy)"></i>Energia</span>
+              <span><i class="dot" style="background:var(--water)"></i>Água</span>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <svg id="chartSvg" viewBox="0 0 460 170" preserveAspectRatio="none" onmousemove="chartHover(event)" onmouseleave="chartOut()">
+              <g stroke="var(--line)" stroke-width="1">
+                <line x1="0" y1="10" x2="460" y2="10"/><line x1="0" y1="50" x2="460" y2="50"/>
+                <line x1="0" y1="90" x2="460" y2="90"/><line x1="0" y1="130" x2="460" y2="130"/>
+              </g>
+              <polyline id="lineEnergy" fill="none" stroke="var(--energy)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" points=""/>
+              <polyline id="lineWater" fill="none" stroke="var(--water)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" points=""/>
+              <line id="hoverLine" x1="0" y1="0" x2="0" y2="170" stroke="var(--text-faint)" stroke-width="1" opacity="0"/>
+            </svg>
+            <div class="chart-tip" id="chartTip"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Últimos eventos</h2></div>
+          <div id="mini-alerts"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== VIEW: MURAL DE AVISOS ===== -->
+    <section class="view" data-view="mural">
+      <div class="topbar"><div><h1>Mural de Avisos</h1><p>Comunicados de RH, Qualidade, Manutenção e Segurança</p></div></div>
+      <div class="grid2-eq">
+        <div class="panel" style="display:flex; flex-direction:column;">
+          <div class="panel-head" style="margin-bottom:16px;">
+            <h2>Quadro de Avisos</h2>
+            <div style="display:flex; gap:8px;">
+              <select id="filtro-setor" class="input-field" style="width:auto; padding:4px 8px;">
+                <option value="todos">Todos os setores</option>
+                <option value="Produção">Produção</option>
+                <option value="Manutenção">Manutenção</option>
+                <option value="Logística">Logística</option>
+                <option value="Qualidade">Qualidade</option>
+              </select>
+              <select id="filtro-turno" class="input-field" style="width:auto; padding:4px 8px;">
+                <option value="todos">Todos os turnos</option>
+                <option value="1º turno">1º turno</option>
+                <option value="2º turno">2º turno</option>
+                <option value="3º turno">3º turno</option>
+              </select>
+            </div>
+          </div>
+          <div id="mural-lista" style="flex:1; overflow-y:auto; padding-right:6px;"></div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <div class="panel">
+            <div class="panel-head"><h2>Publicar novo aviso</h2></div>
+            <form id="form-aviso">
+              <div style="display:flex; gap:10px; margin-bottom:12px;">
+                <div class="form-group" style="flex:1; margin:0;">
+                  <label>Setor Alvo</label>
+                  <select id="input-setor" class="input-field" required>
+                    <option value="Produção">Produção</option>
+                    <option value="Manutenção">Manutenção</option>
+                    <option value="Logística">Logística</option>
+                    <option value="Qualidade">Qualidade</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex:1; margin:0;">
+                  <label>Turno</label>
+                  <select id="input-turno" class="input-field" required>
+                    <option value="1º turno">1º turno</option>
+                    <option value="2º turno">2º turno</option>
+                    <option value="3º turno">3º turno</option>
+                    <option value="Geral">Geral (Todos)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Mensagem</label>
+                <textarea id="input-texto" class="input-field" rows="3" required placeholder="Digite o aviso..."></textarea>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label style="display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer;">
+                  <input type="checkbox" id="input-critico" style="accent-color:var(--water); width:16px; height:16px;">
+                  Exige confirmação (Crítico)
+                </label>
+                <button type="submit" class="btn-primary" style="width:auto;">Publicar</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="panel" style="flex:1;">
+            <div class="panel-head"><h2>Painel de Confirmações</h2></div>
+            <div id="painel-lista" style="display:flex; flex-direction:column; gap:10px;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== VIEW: ALERTAS ===== -->
+    <section class="view" data-view="alertas">
+      <div class="topbar">
+        <div><h1>Alertas</h1><p>Gerados automaticamente por energia, água, temperatura, sensores e segurança</p></div>
+      </div>
+      <div class="panel">
+        <div class="filter-row" id="filterRowAlertas"></div>
+        <div id="alert-list"></div>
+      </div>
+    </section>
+
+    <!-- ===== VIEW: RELATÓRIOS ===== -->
+    <section class="view" data-view="relatorios">
+      <div class="topbar"><div><h1>Relatórios</h1><p>Economia, alertas, sensores e histórico da Linha 3</p></div></div>
+      <div class="grid2" style="margin-bottom:14px;">
+        <div class="panel">
+          <div class="panel-head"><h2>Economia por categoria — setembro</h2></div>
+          <div class="report-bar-row">
+            <div class="report-bar-label"><span>Energia</span><span class="mono">R$ 780</span></div>
+            <div class="report-bar-track"><div class="report-bar-fill" style="width:63%; background:var(--energy);"></div></div>
+          </div>
+          <div class="report-bar-row">
+            <div class="report-bar-label"><span>Água</span><span class="mono">R$ 460</span></div>
+            <div class="report-bar-track"><div class="report-bar-fill" style="width:37%; background:var(--water);"></div></div>
+          </div>
+        </div>
+        <div class="panel"><div class="panel-head"><h2>Alertas por tipo</h2></div><div id="alert-breakdown">Em breve.</div></div>
+      </div>
+    </section>
+
+    <!-- ===== VIEW: CONFIGURAÇÕES ===== -->
+    <section class="view" data-view="config">
+      <div class="topbar"><div><h1>Configurações</h1><p>Acessibilidade, perfil e limites de alerta</p></div></div>
+      <div class="grid2">
+        <div class="panel">
+          <div class="panel-head"><h2>Acessibilidade</h2></div>
+          <div class="a11y-row">
+            <div><div class="a11y-label">Alto contraste</div></div>
+            <button class="switch" id="sw-contrast" onclick="toggleContrast(this)"></button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Perfil e limites</h2></div>
+          <div class="a11y-row">
+            <div><div class="a11y-label">Usuário ativo</div></div>
+            <div class="profile-pick" id="profilePick">
+              <button onclick="setUser('Felipe')" data-user="Felipe">Felipe</button>
+              <button onclick="setUser('Gabriel')" data-user="Gabriel">Gabriel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
