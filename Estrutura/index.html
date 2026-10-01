@@ -4,20 +4,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EcoMonitor Industrial + IA</title>
+  
+  <!-- Fontes do Google -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Estilos CSS -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="app" style="position:relative;">
 
-  
-
+  <!-- Menu Lateral -->
   <aside class="side">
     <div class="brand">
       <div class="brand-mark"></div>
-      <div><div class="brand-name">EcoMonitor</div><div class="brand-sub">Industrial</div></div>
+      <div>
+        <div class="brand-name">EcoMonitor</div>
+        <div class="brand-sub">Industrial</div>
+      </div>
     </div>
     <nav id="navList">
       <button data-view="painel" class="active" onclick="setView('painel')">
@@ -41,6 +47,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.9 7.9 0 000-2l2-1.6-2-3.4-2.4.6a8 8 0 00-1.7-1L14.7 3h-4.6l-.6 2.6a8 8 0 00-1.7 1l-2.4-.6-2 3.4L5.4 11a7.9 7.9 0 000 2l-2 1.6 2 3.4 2.4-.6a8 8 0 001.7 1l.6 2.6h4.6l.6-2.6a8 8 0 001.7-1l2.4.6 2-3.4z"/></svg>
         Configurações
       </button>
+      
     </nav>
     <div class="side-foot">
       <div class="side-foot-top">
@@ -55,16 +62,17 @@
     </div>
   </aside>
 
+  <!-- Conteúdo Principal -->
   <main class="main">
 
-    <!-- ===== VIEW: PAINEL ===== -->
+    <!-- VIEW: PAINEL -->
     <section class="view active" data-view="painel">
       <div class="topbar">
         <div><h1>Painel de consumo</h1><p id="clock">—</p></div>
         <div class="live"><span class="live-dot"></span>Dados ao vivo</div>
       </div>
 
-      <!-- BARRA DE PESQUISA IA -->
+      <!-- ASSISTENTE IA -->
       <div class="panel" style="margin-bottom: 18px; padding-bottom: 12px;">
         <div class="panel-head" style="margin-bottom:12px;">
           <h2>Assistente Inteligente <span class="kpi-tag tag-ai" style="margin-left: 6px;">IA</span></h2>
@@ -78,6 +86,7 @@
         </div>
       </div>
 
+      <!-- KPIs -->
       <div class="kpis">
         <div class="kpi" id="kpi-energy">
           <div class="kpi-top"><span class="kpi-label">Energia agora</span><span class="kpi-tag tag-ok" id="tag-energy">Normal</span></div>
@@ -101,6 +110,7 @@
         </div>
       </div>
 
+      <!-- GRÁFICO E EVENTOS -->
       <div class="grid2">
         <div class="panel">
           <div class="panel-head">
@@ -131,7 +141,7 @@
       </div>
     </section>
 
-    <!-- ===== VIEW: MURAL DE AVISOS ===== -->
+    <!-- VIEW: MURAL DE AVISOS -->
     <section class="view" data-view="mural">
       <div class="topbar"><div><h1>Mural de Avisos</h1><p>Comunicados de RH, Qualidade, Manutenção e Segurança</p></div></div>
       <div class="grid2-eq">
@@ -139,14 +149,14 @@
           <div class="panel-head" style="margin-bottom:16px;">
             <h2>Quadro de Avisos</h2>
             <div style="display:flex; gap:8px;">
-              <select id="filtro-setor" class="input-field" style="width:auto; padding:4px 8px;">
+              <select id="filtro-setor" class="input-field" style="width:auto; padding:4px 8px;" onchange="renderMural()">
                 <option value="todos">Todos os setores</option>
                 <option value="Produção">Produção</option>
                 <option value="Manutenção">Manutenção</option>
                 <option value="Logística">Logística</option>
                 <option value="Qualidade">Qualidade</option>
               </select>
-              <select id="filtro-turno" class="input-field" style="width:auto; padding:4px 8px;">
+              <select id="filtro-turno" class="input-field" style="width:auto; padding:4px 8px;" onchange="renderMural()">
                 <option value="todos">Todos os turnos</option>
                 <option value="1º turno">1º turno</option>
                 <option value="2º turno">2º turno</option>
@@ -160,7 +170,7 @@
         <div style="display:flex; flex-direction:column; gap:14px;">
           <div class="panel">
             <div class="panel-head"><h2>Publicar novo aviso</h2></div>
-            <form id="form-aviso">
+            <form id="form-aviso" onsubmit="publicarAviso(event)">
               <div style="display:flex; gap:10px; margin-bottom:12px;">
                 <div class="form-group" style="flex:1; margin:0;">
                   <label>Setor Alvo</label>
@@ -203,7 +213,7 @@
       </div>
     </section>
 
-    <!-- ===== VIEW: ALERTAS ===== -->
+    <!-- VIEW: ALERTAS -->
     <section class="view" data-view="alertas">
       <div class="topbar">
         <div><h1>Alertas</h1><p>Gerados automaticamente por energia, água, temperatura, sensores e segurança</p></div>
@@ -214,7 +224,7 @@
       </div>
     </section>
 
-    <!-- ===== VIEW: RELATÓRIOS ===== -->
+    <!-- VIEW: RELATÓRIOS -->
     <section class="view" data-view="relatorios">
       <div class="topbar"><div><h1>Relatórios</h1><p>Economia, alertas, sensores e histórico da Linha 3</p></div></div>
       <div class="grid2" style="margin-bottom:14px;">
@@ -229,11 +239,14 @@
             <div class="report-bar-track"><div class="report-bar-fill" style="width:37%; background:var(--water);"></div></div>
           </div>
         </div>
-        <div class="panel"><div class="panel-head"><h2>Alertas por tipo</h2></div><div id="alert-breakdown">Em breve.</div></div>
+        <div class="panel">
+          <div class="panel-head"><h2>Alertas por tipo</h2></div>
+          <div id="alert-breakdown">Aguardando dados...</div>
+        </div>
       </div>
     </section>
 
-    <!-- ===== VIEW: CONFIGURAÇÕES ===== -->
+    <!-- VIEW: CONFIGURAÇÕES -->
     <section class="view" data-view="config">
       <div class="topbar"><div><h1>Configurações</h1><p>Acessibilidade, perfil e limites de alerta</p></div></div>
       <div class="grid2">
@@ -260,8 +273,10 @@
   </main>
 </div>
 
+<!-- Toast Notificação -->
 <div class="toast" id="toast"></div>
 
-<script src="script.js"></script>
+<!-- Lógica JavaScript Externa -->
+<script src="JS.js"></script>
 </body>
 </html>

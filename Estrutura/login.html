@@ -3,455 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EcoMonitor Industrial - Acesso ao Sistema</title>
-  
-  <!-- Fontes Oficiais do Projeto -->
+  <title>Login - EcoMonitor Industrial</title>
+  <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
-  <style>
-    /* ===== VARIÁVEIS DO TEMA ===== */
-    :root {
-      --bg: #0E1113;
-      --panel: #181D20;
-      --panel-2: #1F262A;
-      --line: #2A3337;
-      --text: #ECF1F1;
-      --text-dim: #8DA0A3;
-      --text-faint: #5C6D70;
-      --energy: #E8A33D;
-      --water: #3FB0B6;
-      --water-soft: rgba(63, 176, 182, 0.14);
-      --danger: #E2685D;
-      --danger-soft: rgba(226, 104, 93, 0.14);
-      --ok: #63C285;
-      --radius: 12px;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'IBM Plex Sans', sans-serif;
-      background: #08090A;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .mono {
-      font-family: 'IBM Plex Mono', monospace;
-    }
-
-    /* ===== CONTAINER PRINCIPAL ===== */
-    .login-container {
-      width: 100%;
-      max-width: 420px;
-      background: var(--bg);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 32px 28px;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* Cabeçalho / Marca */
-    .brand-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    .brand-mark {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--energy), var(--water));
-      flex-shrink: 0;
-    }
-
-    .brand-title h1 {
-      font-size: 18px;
-      font-weight: 600;
-      line-height: 1.2;
-    }
-
-    .brand-title span {
-      font-size: 11px;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    /* Texto do Login */
-    .login-intro {
-      margin-bottom: 24px;
-    }
-
-    .login-intro h2 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    .login-intro p {
-      font-size: 13px;
-      color: var(--text-dim);
-    }
-
-    /* ===== FORMULÁRIO ===== */
-    .form-group {
-      margin-bottom: 18px;
-      position: relative;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 12px;
-      color: var(--text-dim);
-      margin-bottom: 6px;
-      font-weight: 500;
-    }
-
-    .input-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .input-field {
-      width: 100%;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      color: var(--text);
-      padding: 10px 12px;
-      font-size: 13.5px;
-      font-family: inherit;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .input-field:focus {
-      outline: none;
-      border-color: var(--water);
-      box-shadow: 0 0 0 3px var(--water-soft);
-    }
-
-    /* Botão de Exibir Senha */
-    .toggle-password {
-      position: absolute;
-      right: 10px;
-      background: none;
-      border: none;
-      color: var(--text-dim);
-      cursor: pointer;
-      padding: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: color 0.2s;
-    }
-
-    .toggle-password:hover {
-      color: var(--text);
-    }
-
-    .toggle-password svg {
-      width: 16px;
-      height: 16px;
-    }
-
-    /* Opções Extra (Lembrar e Esqueceu a senha) */
-    .form-options {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      margin-bottom: 22px;
-    }
-
-    .remember-me {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--text-dim);
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .remember-me input {
-      accent-color: var(--water);
-      width: 15px;
-      height: 15px;
-      cursor: pointer;
-    }
-
-    .forgot-link {
-      color: var(--water);
-      text-decoration: none;
-      transition: opacity 0.2s;
-    }
-
-    .forgot-link:hover {
-      text-decoration: underline;
-      opacity: 0.85;
-    }
-
-    /* Botão de Entrar */
-    .btn-submit {
-      width: 100%;
-      background: var(--water);
-      color: #08191B;
-      border: none;
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: opacity 0.2s, transform 0.1s;
-    }
-
-    .btn-submit:hover {
-      opacity: 0.9;
-    }
-
-    .btn-submit:active {
-      transform: scale(0.99);
-    }
-
-    .btn-submit.loading {
-      opacity: 0.7;
-      pointer-events: none;
-    }
-
-    /* Mensagens de Feedback */
-    .alert-msg {
-      padding: 10px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      margin-bottom: 18px;
-      display: none;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .alert-msg.error {
-      display: flex;
-      background: var(--danger-soft);
-      border: 1px solid rgba(226, 104, 93, 0.3);
-      color: var(--danger);
-    }
-
-    .alert-msg.success {
-      display: flex;
-      background: rgba(99, 194, 133, 0.14);
-      border: 1px solid rgba(99, 194, 133, 0.3);
-      color: var(--ok);
-    }
-
-    /* Rodapé da Tela */
-    .login-footer {
-      margin-top: 28px;
-      padding-top: 18px;
-      border-top: 1px solid var(--line);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      color: var(--text-faint);
-    }
-
-    .status-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--ok);
-    }
-
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--ok);
-      border-radius: 50%;
-    }
-  </style>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="login-page">
 
   <div class="login-container">
-    
-    <!-- Identidade Visual -->
-    <div class="brand-header">
-      <div class="brand-mark"></div>
-      <div class="brand-title">
-        <h1>EcoMonitor</h1>
-        <span>Plataforma Industrial</span>
+    <div class="login-card">
+      <div class="login-header">
+        <div class="logo">
+          <span class="logo-icon">⚡</span>
+          <span class="logo-text">EcoMonitor</span>
+        </div>
+        <h2>Acesso ao Sistema</h2>
+        <p>Monitorização Industrial — Linha 3</p>
       </div>
-    </div>
 
-    <!-- Introdução -->
-    <div class="login-intro">
-      <h2>Acessar conta</h2>
-      <p>Digite suas credenciais para acessar a Linha 3.</p>
-    </div>
+      <form id="loginForm" onsubmit="realizarLogin(event)" class="login-form">
+        <div class="form-group">
+          <label for="loginUser">Utilizador / Perfil</label>
+          <select id="loginUser" required>
+            <option value="Felipe">Felipe (tec. Produção)</option>
+            <option value="Mariana">Gabriel (Téc. Segurança)</option>
+            <option value="Carlos">Rodrigo (CO)</option>
+          </select>
+        </div>
 
-    <!-- Caixa de Erro / Sucesso -->
-    <div id="alertBox" class="alert-msg"></div>
+        <div class="form-group">
+          <label for="loginPass">Palavra-passe</label>
+          <input type="password" id="loginPass" placeholder="••••••••" required>
+        </div>
 
-    <!-- Formulário -->
-    <form id="loginForm" onsubmit="handleLogin(event)">
+        <div id="loginError" class="login-error" style="display: none;">
+          Palavra-passe incorreta. Tente novamente.
+        </div>
+
+        <button type="submit" class="btn-primary btn-block">Entrar no Painel</button>
+      </form>
       
-      <div class="form-group">
-        <label for="username">Usuário ou Matrícula</label>
-        <div class="input-wrapper">
-          <input 
-            type="text" 
-            id="username" 
-            class="input-field" 
-            placeholder="Ex: Felipe ou Gabriel" 
-            required 
-            autocomplete="username"
-          >
-        </div>
+      <div class="login-footer">
+        
       </div>
-
-      <div class="form-group">
-        <label for="password">Senha</label>
-        <div class="input-wrapper">
-          <input 
-            type="password" 
-            id="password" 
-            class="input-field" 
-            placeholder="••••••••" 
-            required 
-            autocomplete="current-password"
-          >
-          <button type="button" class="toggle-password" onclick="togglePasswordVisibility()" title="Mostrar/Ocultar Senha">
-            <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-              <circle cx="12" cy="12" r="3"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="form-options">
-        <label class="remember-me">
-          <input type="checkbox" id="rememberMe">
-          <span>Lembrar usuário</span>
-        </label>
-        <a href="#" class="forgot-link" onclick="forgotPassword(event)">Esqueceu a senha?</a>
-      </div>
-
-      <button type="submit" id="btnSubmit" class="btn-submit">
-        <span>Entrar na plataforma</span>
-      </button>
-
-    </form>
-
-    <!-- Rodapé Informativo -->
-    <div class="login-footer">
-      <div class="status-badge">
-        <span class="status-dot"></span>
-        <span>Sistemas Operacionais</span>
-      </div>
-      <span class="mono">v2.4.0</span>
     </div>
-
   </div>
 
-  <!-- ===== JAVASCRIPT ===== -->
   <script>
-    // Alternar visibilidade da senha (mostrar/esconder)
-    function togglePasswordVisibility() {
-      const passwordInput = document.getElementById('password');
-      const eyeIcon = document.getElementById('eyeIcon');
-
-      if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        // Ícone com risco (senha visível)
-        eyeIcon.innerHTML = `
-          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-          <line x1="1" y1="1" x2="23" y2="23"/>
-        `;
-      } else {
-        passwordInput.type = 'password';
-        // Ícone do olho normal (senha oculta)
-        eyeIcon.innerHTML = `
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-          <circle cx="12" cy="12" r="3"/>
-        `;
-      }
-    }
-
-    // Processamento do formulário de login
-    function handleLogin(event) {
-      event.preventDefault();
-
-      const userVal = document.getElementById('username').value.trim();
-      const passVal = document.getElementById('password').value.trim();
-      const btnSubmit = document.getElementById('btnSubmit');
-      const alertBox = document.getElementById('alertBox');
-
-      // Reseta estado do alerta
-      alertBox.className = 'alert-msg';
-      alertBox.style.display = 'none';
-
-      // Simulação de validação
-      if (!userVal || !passVal) {
-        showAlert('Por favor, preencha todos os campos.', 'error');
-        return;
-      }
-
-      // Efeito de carregamento (Loading)
-      btnSubmit.classList.add('loading');
-      btnSubmit.innerHTML = '<span>Autenticando...</span>';
-
-      // Simula requisição à API do sistema
-      setTimeout(() => {
-        // Exemplo simples: Aceita 'Felipe' ou 'Gabriel' com qualquer senha maior de 3 dígitos
-        if ((userVal.toLowerCase() === 'felipe' || userVal.toLowerCase() === 'gabriel') && passVal.length >= 3) {
-          showAlert('Login efetuado com sucesso! Redirecionando...', 'success');
-          
-          // Redirecionaria para o painel principal
-          setTimeout(() => {
-            window.location.href = 'index.html'; 
-          }, 1200);
-
-        } else {
-          btnSubmit.classList.remove('loading');
-          btnSubmit.innerHTML = '<span>Entrar na plataforma</span>';
-          showAlert('Usuário ou senha incorretos.', 'error');
-        }
-      }, 1000);
-    }
-
-    // Mostrar mensagens de erro/sucesso
-    function showAlert(msg, type) {
-      const alertBox = document.getElementById('alertBox');
-      alertBox.textContent = msg;
-      alertBox.className = `alert-msg ${type}`;
-      alertBox.style.display = 'flex';
-    }
-
-    // Esqueceu a senha
-    function forgotPassword(e) {
+    function realizarLogin(e) {
       e.preventDefault();
-      showAlert('Solicite a redefinição de senha ao supervisor da Linha 3.', 'error');
+      const user = document.getElementById('loginUser').value;
+      const pass = document.getElementById('loginPass').value;
+      const errorDiv = document.getElementById('loginError');
+
+      // Validação simples de credenciais
+      if (pass === '12345678' || pass === 'admin' || pass.length >= 4) {
+        localStorage.setItem('ecomonitor_user', user);
+        window.location.href = 'index.html';
+      } else {
+        errorDiv.style.display = 'block';
+      }
     }
   </script>
-
 </body>
 </html>
