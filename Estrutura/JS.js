@@ -9,7 +9,7 @@
   };
 
   const state = {
-    user: null,
+    user: 'Felipe',
     contrast: false,
     thresholds: { energy: 60, water: 130, temp: 42 },
     energy: 42.8,
@@ -27,35 +27,27 @@
     avisos: [
       { id: 1, setor: "Produção", turno: "1º turno", texto: "Manutenção preventiva na prensa 3 amanhã.", critico: true, autor: "Segurança", dataHora: "hoje, 07:12", confirmacoes: ["Felipe"] }
     ],
-    efetivoPorSetor: { "Produção": 18, "Manutenção": 6, "Logística": 10, "Qualidade": 8 }
+    efetivoPorSetor: { "Produção": 18, "Manutenção": 6, "Logística": 10, "Qualidade": 8 },
+    registros: [
+      { id: 101, tipo: 'sensor', setor: 'Prensa 3', energia: 58.5, agua: 125, temp: 41, obs: 'Ruído normal no pistão', autor: 'Felipe', hora: '08:30', status: 'Aprovado' },
+      { id: 102, tipo: 'producao', lote: 'LOTE-A12', turno: '1º turno', boas: 520, refugo: 8, motivo: 'Rebarba leve', autor: 'Felipe', hora: '09:15', status: 'Aprovado' },
+      { id: 103, tipo: 'inspecao', equip: 'Motor Compressor 2', statusInsp: 'Alerta', detalhes: 'Vibração leve no rolamento', autor: 'Gabriel', hora: '09:40', status: 'Pendente' }
+    ]
   };
 
-  const $ = sel => document.querySelector(sel);
-  const $$ = sel => document.querySelectorAll(sel);    /* ---------- Login Gate ---------- */   let selectedGateUser = null;    window.pickUser = function (el, user) {     $$('.gate-user').forEach(u => u.classList.remove('selected'));
-    el.classList.add('selected');
-    selectedGateUser = user;
-    $('#gate-enter').classList.add('ready');
-  };
+  const $ = sel => document.querySelector(sel);   const $$ = sel => document.querySelectorAll(sel);
 
-  window.enterApp = function () {
-    if (!selectedGateUser) return;
-    setUser(selectedGateUser);
-    $('#gate').classList.add('hidden');
-    showToast(`Bem-vindo, ${selectedGateUser}!`);
-  };
-
+  /* ---------- Login / Sessão ---------- */
   window.logout = function () {
-    state.user = null;
-    $('#gate').classList.remove('hidden');     $$('.gate-user').forEach(u => u.classList.remove('selected'));$('#gate-enter').classList.remove('ready');
+    showToast("Sessão encerrada.");
   };
 
   window.setUser = function (u) {
     state.user = u;
     $('#sideUser').textContent = u;
-    $('#sideAvatar').textContent = u.charAt(0);      $$('#profilePick button').forEach(b => {
+    $('#sideAvatar').textContent = u.charAt(0);     $$('#profilePick button').forEach(b => {
       b.classList.toggle('active', b.dataset.user === u);
     });
-
     renderMural();
   };
 
@@ -65,6 +57,11 @@
 ('.view').forEach(sec => {
       sec.classList.toggle('active', sec.dataset.view === v);
     });
+
+    if (v === 'registro-dados') {
+      renderTabelaRegistros();
+      atualizarKpisRegistros();
+    }
   };
 
   /* ---------- Inteligência Artificial (Bot) ---------- */
@@ -81,50 +78,246 @@
     const query = rawText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     let response = "";
 
-    if (query.includes('resumo') || query.includes('status') || query.includes('geral') || query.includes('tudo')) {
+    if (query.includes('resumo') || query.includes('status') || query.includes('geral')) {
       const pending = state.alerts.filter(a => !a.resolved).length;
-      response = `Aqui está o panorama da Linha 3: Energia a <b>${state.energy.toFixed(1)} kWh</b>, Água a <b>${state.water.toFixed(0)} L/h</b> e Temperatura em <b>${state.temp.toFixed(0)}°C</b>. Temos <span class="ai-highlight">${pending} alerta(s)</span> pendente(s).`;
+      response = `Panorama da Linha 3: Energia a <b>${state.energy.toFixed(1)} kWh</b>, Água a <b>${state.water.toFixed(0)} L/h</b>. Temos <span class="ai-highlight">${pending} alerta(s)</span> e <span class="ai-highlight">${state.registros.length} registro(s)</span> gravados hoje.`;
     } 
-    else if (query.includes('energia') || query.includes('eletrica') || query.includes('kwh')) {
-      const status = state.energy > state.thresholds.energy ? "acima do limite" : "dentro do normal";
-      const maxE = Math.max(...state.energyData).toFixed(1);
-      response = `O consumo de energia agora é de <span class="ai-highlight">${state.energy.toFixed(1)} kWh</span> (${status}). O pico mais alto registrado no gráfico recente foi de <b>${maxE} kWh</b>.`;
-    } 
-    else if (query.includes('agua') || query.includes('litro')) {
-      const status = state.water > state.thresholds.water ? "acima do limite" : "normal";
-      const maxW = Math.max(...state.waterData).toFixed(0);
-      response = `O fluxo de água está em <span class="ai-highlight">${state.water.toFixed(0)} L/h</span> (${status}). O volume máximo no gráfico hoje atingiu <b>${maxW} L/h</b>.`;
-    } 
-    else if (query.includes('temperatura') || query.includes('grau') || query.includes('quente')) {
-      const status = state.temp > state.thresholds.temp ? "em superaquecimento!" : "segura";
-      response = `A temperatura atual do painel é <span class="ai-highlight">${state.temp.toFixed(0)}°C</span>, uma faixa considerada <b>${status}</b> (O limite configurado é ${state.thresholds.temp}°C).`;
-    } 
-    else if (query.includes('alerta') || query.includes('aviso') || query.includes('problema') || query.includes('erro')) {
-      const pending = state.alerts.filter(a => !a.resolved);
-      if (pending.length === 0) {
-        response = `Ótima notícia! Nenhum alerta pendente agora. Vocês já resolveram <b>${state.resolvedCount}</b> problema(s) nesta sessão.`;
-      } else {
-        response = `Atenção: temos <span class="ai-highlight">${pending.length} alerta(s) ativos</span>. O mais recente é: <i>"${pending[0].title}"</i>.`;
-      }
-    } 
-    else if (query.includes('economia') || query.includes('dinheiro') || query.includes('reai') || query.includes('custo') || query.includes('relatorio')) {
-      response = `Neste mês, a economia total calculada é de <span class="ai-highlight">R$ 1.240 (+12%)</span>. Sendo aproximadamente R$ 780 poupados em energia e R$ 460 em água na Linha 3.`;
-    } 
-    else if (query.includes('mural') || query.includes('comunicado')) {
-      response = `Atualmente temos <b>${state.avisos.length} aviso(s)</b> publicado(s) no mural de avisos da fábrica.`;
+    else if (query.includes('registro') || query.includes('apontamento') || query.includes('producao')) {
+      response = `Temos <b>${state.registros.length} registros operacionais</b> hoje. Você pode adicionar novas medições na aba <i>"Registrar dados"</i>.`;
+    }
+    else if (query.includes('energia') || query.includes('kwh')) {
+      response = `Consumo de energia atual em <span class="ai-highlight">${state.energy.toFixed(1)} kWh</span>.`;
     } 
     else {
-      response = `Não entendi exatamente. Experimente perguntar sobre <b>resumo</b>, <b>energia</b>, <b>água</b>, <b>temperatura</b>, <b>alertas</b> ou <b>economia</b>.`;
+      response = `Não ententido totalmente. Você pode me pedir um <b>resumo</b> ou verificar <b>registros</b>, <b>energia</b> e <b>alertas</b>.`;
     }
 
     output.innerHTML = `<span class="ai-message">${response}</span>`;
     input.value = '';
   };
 
+  /* ---------- Módulo: Registrar Dados ---------- */
+  window.setTab = function (tabName) {
+    $$('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabName));$$
+('.tab-content').forEach(form => form.classList.toggle('active', form.id === `form-registro-${tabName}`));
+  };
+
+  window.salvarRegistroSensor = function (e) {
+    e.preventDefault();
+    const setor = $('#reg-sensor-setor').value;
+    const energia = parseFloat($('#reg-sensor-energia').value);
+    const agua = parseFloat($('#reg-sensor-agua').value);
+    const temp = parseFloat($('#reg-sensor-temp').value);
+    const obs = $('#reg-sensor-obs').value.trim();
+
+    const novo = {
+      id: Date.now(),
+      tipo: 'sensor',
+      setor,
+      energia,
+      agua,
+      temp,
+      obs: obs || 'Sem observações',
+      autor: state.user || 'Operador',
+      hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      status: (energia > state.thresholds.energy || temp > state.thresholds.temp) ? 'Pendente' : 'Aprovado'
+    };
+
+    // Caso valores estejam acima do limite, gera alerta automático
+    if (energia > state.thresholds.energy) {
+      state.alerts.unshift({
+        id: state.nextAlertId++,
+        title: `Consumo alto lançado em ${setor}: ${energia} kWh`,
+        cat: 'energia',
+        time: 'agora',
+        resolved: false
+      });
+      renderAlerts();
+    }
+
+    state.registros.unshift(novo);
+    e.target.reset();
+    showToast("Medição de sensores registrada!");
+    renderTabelaRegistros();
+    atualizarKpisRegistros();
+  };
+
+  window.salvarRegistroProducao = function (e) {
+    e.preventDefault();
+    const lote = $('#reg-prod-lote').value;
+    const turno = $('#reg-prod-turno').value;
+    const boas = parseInt($('#reg-prod-boas').value, 10);
+    const refugo = parseInt($('#reg-prod-refugo').value, 10);
+    const motivo = $('#reg-prod-motivo').value.trim();
+
+    const novo = {
+      id: Date.now(),
+      tipo: 'producao',
+      lote,
+      turno,
+      boas,
+      refugo,
+      motivo: motivo || 'Nenhum motivo indicado',
+      autor: state.user || 'Operador',
+      hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      status: refugo > 20 ? 'Pendente' : 'Aprovado'
+    };
+
+    state.registros.unshift(novo);
+    e.target.reset();
+    showToast("Apontamento de produção salvo!");
+    renderTabelaRegistros();
+    atualizarKpisRegistros();
+  };
+
+  window.salvarRegistroInspecao = function (e) {
+    e.preventDefault();
+    const equip = $('#reg-insp-equip').value;
+    const statusInsp = $('#reg-insp-status').value;
+    const detalhes = $('#reg-insp-detalhes').value.trim();
+
+    const novo = {
+      id: Date.now(),
+      tipo: 'inspecao',
+      equip,
+      statusInsp,
+      detalhes,
+      autor: state.user || 'Técnico',
+      hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      status: statusInsp === 'Crítico' ? 'Pendente' : 'Aprovado'
+    };
+
+    if (statusInsp === 'Crítico') {
+      state.alerts.unshift({
+        id: state.nextAlertId++,
+        title: `Inspeção crítica em: ${equip}`,
+        cat: 'manutencao',
+        time: 'agora',
+        resolved: false
+      });
+      renderAlerts();
+    }
+
+    state.registros.unshift(novo);
+    e.target.reset();
+    showToast("Inspeção gravada!");
+    renderTabelaRegistros();
+    atualizarKpisRegistros();
+  };
+
+  window.renderTabelaRegistros = function () {
+    const tbody = $('#tbody-registros');
+    const filtroTipo = $('#filter-tipo-registro').value;
+    const busca = $('#search-registro').value.toLowerCase();
+
+    const filtrados = state.registros.filter(r => {
+      const matchTipo = filtroTipo === 'todos' || r.tipo === filtroTipo;
+      const texto = JSON.stringify(r).toLowerCase();
+      const matchBusca = texto.includes(busca);
+      return matchTipo && matchBusca;
+    });
+
+    if (filtrados.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhum registro encontrado.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtrados.map(r => {
+      let badgeTag = '';
+      let resumo = '';
+
+      if (r.tipo === 'sensor') {
+        badgeTag = `<span class="badge-type type-sensor">Sensor</span>`;
+        resumo = `<b>${r.setor}</b> — ${r.energia}kWh / ${r.agua}L/h / ${r.temp}°C`;
+      } else if (r.tipo === 'producao') {
+        badgeTag = `<span class="badge-type type-prod">Produção</span>`;
+        resumo = `Lote <b>${r.lote}</b> (${r.turno}) — Boas: ${r.boas} | Refugo: ${r.refugo}`;
+      } else {
+        badgeTag = `<span class="badge-type type-insp">Inspeção</span>`;
+        resumo = `<b>${r.equip}</b>: ${r.statusInsp}`;
+      }
+
+      const statusBadge = r.status === 'Aprovado' 
+        ? `<span class="kpi-tag tag-ok">Aprovado</span>` 
+        : `<span class="kpi-tag tag-warn">Pendente</span>`;
+
+      return `
+        <tr>
+          <td>${badgeTag}</td>
+          <td><div style="font-size:12px;">${resumo}</div></td>
+          <td><small style="color:var(--text-dim);">${r.autor} (${r.hora})</small></td>
+          <td>${statusBadge}</td>
+          <td style="text-align:right;">
+            ${r.status === 'Pendente' ? `<button class="btn-confirmar" style="font-size:10px; padding:2px 6px;" onclick="aprovarRegistro(${r.id})">Aprovar</button>` : ''}
+            <button class="btn-confirmar" style="font-size:10px; padding:2px 6px; color:var(--danger);" onclick="excluirRegistro(${r.id})">✕</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  };
+
+  window.aprovarRegistro = function (id) {
+    const reg = state.registros.find(r => r.id === id);
+    if (reg) {
+      reg.status = 'Aprovado';
+      showToast("Registro aprovado!");
+      renderTabelaRegistros();
+      atualizarKpisRegistros();
+    }
+  };
+
+  window.excluirRegistro = function (id) {
+    state.registros = state.registros.filter(r => r.id !== id);
+    showToast("Registro removido.");
+    renderTabelaRegistros();
+    atualizarKpisRegistros();
+  };
+
+  function atualizarKpisRegistros() {
+    $('#kpi-count-hoje').textContent = state.registros.length;
+    
+    const pendentes = state.registros.filter(r => r.status === 'Pendente').length;
+    $('#kpi-count-pendente').textContent = pendentes;
+    $('#tag-pendente').textContent = pendentes > 0 ? 'Atenção' : 'OK';
+
+    const sensores = state.registros.filter(r => r.tipo === 'sensor');
+    if (sensores.length > 0) {
+      const somaE = sensores.reduce((acc, curr) => acc + curr.energia, 0);
+      $('#kpi-media-energia').textContent = (somaE / sensores.length).toFixed(1);
+    } else {
+      $('#kpi-media-energia').textContent = '0.0';
+    }
+
+    const producoes = state.registros.filter(r => r.tipo === 'producao');
+    const totalRefugo = producoes.reduce((acc, curr) => acc + (curr.refugo || 0), 0);
+    $('#kpi-total-refugo').textContent = totalRefugo;
+  }
+
+  window.exportarCSV = function () {
+    if (state.registros.length === 0) return showToast("Sem registros para exportar!");
+
+    let csvContent = "data:text/csv;charset=utf-8,ID,Tipo,Autor,Hora,Status,Detalhes\n";
+    state.registros.forEach(r => {
+      const detalhe = (r.setor || r.lote || r.equip || '').replace(/,/g, ' ');
+      csvContent += `${r.id},${r.tipo},${r.autor},${r.hora},${r.status},${detalhe}\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `ecomonitor_registros_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Relatório CSV baixado!");
+  };
+
   /* ---------- Mural de Avisos ---------- */
   window.renderMural = function () {
     const lista = $('#mural-lista');
     const painel = $('#painel-lista');
+    if (!lista || !painel) return;
+
     const fSetor = $('#filtro-setor').value;
     const fTurno = $('#filtro-turno').value;
 
@@ -135,254 +328,104 @@
     });
 
     if (filtrados.length === 0) {
-      lista.innerHTML = `<div class="empty-state">Nenhum aviso encontrado para este filtro.</div>`;
+      lista.innerHTML = `<div class="empty-state">Nenhum aviso encontrado.</div>`;
     } else {
-      lista.innerHTML = filtrados.map(a => {
-        const jaConfirmou = a.confirmacoes.includes(state.user);
-        const btnConfirmar = a.critico
-          ? `<button class="btn-confirmar ${jaConfirmou ? 'confirmado' : ''}" onclick="confirmarAviso(${a.id})">
-              ${jaConfirmou ? '✓ Leitura Confirmada' : 'Confirmar Leitura'}
-             </button>`
-          : '';
-
-        return `
-          <div class="aviso-card">
-            <div class="aviso-meta">
-              <span><b>${a.setor}</b> · ${a.turno}</span>
-              <span>Por ${a.autor} (${a.dataHora})</span>
-            </div>
-            <div class="aviso-texto">${a.texto}</div>
-            <div class="aviso-rodape">
-              <span>${a.critico ? '⚠️ Exige confirmação' : 'Informativo'}</span>
-              ${btnConfirmar}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    // Painel de Confirmações (Para Avisos Críticos)
-    const criticos = state.avisos.filter(a => a.critico);
-    if (criticos.length === 0) {
-      painel.innerHTML = `<div class="empty-state">Nenhum aviso crítico ativo no momento.</div>`;
-    } else {
-      painel.innerHTML = criticos.map(a => {
-        const total = state.efetivoPorSetor[a.setor] || 10;
-        const confirmados = a.confirmacoes.length;
-        const pct = Math.round((confirmados / total) * 100);
-
-        return `
-          <div class="painel-item">
-            <div class="painel-topo">
-              <p><b>${a.setor}</b>: "${a.texto.substring(0, 30)}..."</p>
-              <span class="painel-percentual">${pct}%</span>
-            </div>
-            <div class="report-bar-track">
-              <div class="report-bar-fill" style="width:${pct}%; background:var(--water);"></div>
-            </div>
-            <div class="painel-nomes">
-              Confirmado por: ${a.confirmacoes.join(', ') || 'Ninguém ainda'} (${confirmados}/${total})
-            </div>
-          </div>
-        `;
-      }).join('');
+      lista.innerHTML = filtrados.map(a => `
+        <div class="aviso-card">
+          <div class="aviso-meta"><span><b>${a.setor}</b> · ${a.turno}</span><span>Por ${a.autor}</span></div>
+          <div class="aviso-texto">${a.texto}</div>
+        </div>
+      `).join('');
     }
   };
 
   window.publicarAviso = function (e) {
     e.preventDefault();
-    if (!state.user) return showToast("Selecione um usuário primeiro!");
-
     const setor = $('#input-setor').value;
     const turno = $('#input-turno').value;
     const texto = $('#input-texto').value.trim();
-    const critico = $('#input-critico').checked;
-
     if (!texto) return;
 
-    const novo = {
-      id: Date.now(),
-      setor,
-      turno,
-      texto,
-      critico,
-      autor: state.user,
-      dataHora: 'agora',
-      confirmacoes: []
-    };
-
-    state.avisos.unshift(novo);
+    state.avisos.unshift({
+      id: Date.now(), setor, turno, texto, critico: $('#input-critico').checked, autor: state.user, dataHora: 'agora', confirmacoes: []
+    });
     $('#input-texto').value = '';
-    $('#input-critico').checked = false;
     renderMural();
-    showToast("Aviso publicado com sucesso!");
-  };
-
-  window.confirmarAviso = function (id) {
-    const aviso = state.avisos.find(a => a.id === id);
-    if (aviso && !aviso.confirmacoes.includes(state.user)) {
-      aviso.confirmacoes.push(state.user);
-      renderMural();
-      showToast("Leitura confirmada!");
-    }
+    showToast("Aviso publicado!");
   };
 
   /* ---------- Alertas & Filtros ---------- */
   window.renderAlerts = function () {
     const badge = $('#alertBadge');
     const activeAlerts = state.alerts.filter(a => !a.resolved);
-    badge.textContent = activeAlerts.length;
+    if (badge) badge.textContent = activeAlerts.length;
 
-    // Mini Alertas (Painel Principal)
     const mini = $('#mini-alerts');
-    if (activeAlerts.length === 0) {
-      mini.innerHTML = `<div class="empty-state">Tudo em ordem. Nenhum alerta ativo!</div>`;
-    } else {
-      mini.innerHTML = activeAlerts.slice(0, 3).map(a => `
-        <div class="alert-item">
-          <div class="alert-dot" style="background:${CATS[a.cat]?.color || 'var(--danger)'}"></div>
-          <div class="alert-body">
-            <div class="alert-title">${a.title}</div>
-            <div class="alert-actions">
-              <button class="resolve-btn" onclick="resolveAlert(${a.id})">✓ Marcar como resolvido</button>
+    if (mini) {
+      if (activeAlerts.length === 0) {
+        mini.innerHTML = `<div class="empty-state">Nenhum alerta ativo!</div>`;
+      } else {
+        mini.innerHTML = activeAlerts.slice(0, 3).map(a => `
+          <div class="alert-item">
+            <div class="alert-dot" style="background:${CATS[a.cat]?.color || 'var(--danger)'}"></div>
+            <div class="alert-body">
+              <div class="alert-title">${a.title}</div>
+              <button class="resolve-btn" onclick="resolveAlert(${a.id})">✓ Resolver</button>
             </div>
           </div>
-        </div>
-      `).join('');
+        `).join('');
+      }
     }
 
-    // Tela de Alertas Completa
     const list = $('#alert-list');
-    const filtrados = state.filter === 'todos' 
-      ? state.alerts 
-      : state.alerts.filter(a => a.cat === state.filter);
-
-    if (filtrados.length === 0) {
-      list.innerHTML = `<div class="empty-state">Nenhum alerta nesta categoria.</div>`;
-    } else {
-      list.innerHTML = filtrados.map(a => `
+    if (list) {
+      list.innerHTML = state.alerts.map(a => `
         <div class="alert-item" style="opacity: ${a.resolved ? '0.5' : '1'}">
           <div class="alert-dot" style="background:${CATS[a.cat]?.color || 'var(--text-dim)'}"></div>
-          <div class="alert-body">
-            <div>
-              <span class="alert-cat" style="background:${CATS[a.cat]?.color || '#fff'}; color:#000;">${CATS[a.cat]?.label || a.cat}</span>
-              <span class="alert-title">${a.title}</span>
-            </div>
-            <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">${a.time} ${a.resolved ? '· (Resolvido)' : ''}</div>
-          </div>
+          <div class="alert-body"><span class="alert-title">${a.title}</span></div>
           ${!a.resolved ? `<button class="btn-primary" style="width:auto; padding:4px 8px; font-size:11px;" onclick="resolveAlert(${a.id})">Resolver</button>` : ''}
         </div>
       `).join('');
     }
-
-    renderBreakdown();
   };
 
   window.resolveAlert = function (id) {
     const alert = state.alerts.find(a => a.id === id);
     if (alert) {
       alert.resolved = true;
-      state.resolvedCount++;
       renderAlerts();
-      showToast("Alerta resolvido com sucesso!");
+      showToast("Alerta resolvido!");
     }
   };
 
-  function renderFilterChips() {
-    const container = $('#filterRowAlertas');
-    const categories = ['todos', ...Object.keys(CATS)];
-    container.innerHTML = categories.map(c => `
-      <button class="filter-chip ${state.filter === c ? 'active' : ''}" onclick="setFilter('${c}')">
-        ${c === 'todos' ? 'Todos' : CATS[c].label}
-      </button>
-    `).join('');
-  }
-
-  window.setFilter = function (f) {
-    state.filter = f;
-    renderFilterChips();
-    renderAlerts();
-  };
-
-  function renderBreakdown() {
-    const breakdown = $('#alert-breakdown');
-    if (state.alerts.length === 0) {
-      breakdown.innerHTML = "Sem alertas registrados.";
-      return;
-    }
-    const counts = {};
-    state.alerts.forEach(a => counts[a.cat] = (counts[a.cat] || 0) + 1);
-
-    breakdown.innerHTML = Object.keys(counts).map(cat => `
-      <div class="report-bar-row">
-        <div class="report-bar-label"><span>${CATS[cat]?.label || cat}</span><span class="mono">${counts[cat]}</span></div>
-        <div class="report-bar-track"><div class="report-bar-fill" style="width:${(counts[cat] / state.alerts.length) * 100}%; background:${CATS[cat]?.color || 'var(--water)'};"></div></div>
-      </div>
-    `).join('');
-  }
-
-  /* ---------- Gráfico SVG Dinâmico ---------- */
+  /* ---------- Gráfico SVG ---------- */
   function renderChart() {
-    const ePts = state.energyData.map((val, idx) => {
-      const x = (idx / (state.energyData.length - 1)) * 460;
-      const y = 160 - (val / 80) * 150;
-      return `${x},${y}`;
-    }).join(' ');
+    const lineE = $('#lineEnergy');
+    const lineW = $('#lineWater');
+    if (!lineE || !lineW) return;
 
-    const wPts = state.waterData.map((val, idx) => {
-      const x = (idx / (state.waterData.length - 1)) * 460;
-      const y = 160 - (val / 160) * 150;
-      return `${x},${y}`;
-    }).join(' ');
+    const ePts = state.energyData.map((val, idx) => `${(idx / (state.energyData.length - 1)) * 460},${160 - (val / 80) * 150}`).join(' ');
+    const wPts = state.waterData.map((val, idx) => `${(idx / (state.waterData.length - 1)) * 460},${160 - (val / 160) * 150}`).join(' ');
 
-    $('#lineEnergy').setAttribute('points', ePts);
-    $('#lineWater').setAttribute('points', wPts);
+    lineE.setAttribute('points', ePts);
+    lineW.setAttribute('points', wPts);
   }
 
-  window.chartHover = function (e) {
-    const svg = $('#chartSvg');
-    const rect = svg.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const pct = Math.max(0, Math.min(1, x / rect.width));
-    const idx = Math.round(pct * (state.energyData.length - 1));
-
-    const eVal = state.energyData[idx];
-    const wVal = state.waterData[idx];
-
-    const hoverLine = $('#hoverLine');
-    hoverLine.setAttribute('x1', pct * 460);
-    hoverLine.setAttribute('x2', pct * 460);
-    hoverLine.setAttribute('opacity', '1');
-
-    const tip = $('#chartTip');
-    tip.style.opacity = '1';
-    tip.style.left = `${Math.min(pct * 100, 70)}%`;
-    tip.style.top = '10px';
-    tip.innerHTML = `Ponto ${idx + 1}<br><span style="color:var(--energy)">Energia: ${eVal} kWh</span><br><span style="color:var(--water)">Água: ${wVal} L/h</span>`;
-  };
-
-  window.chartOut = function () {
-    $('#hoverLine').setAttribute('opacity', '0');
-    $('#chartTip').style.opacity = '0';
-  };
-
-  /* ---------- Relógio & Atualização de Dados ---------- */
+  /* ---------- Relógio & Simulação ---------- */
   function updateClock() {
-    const now = new Date();
-    $('#clock').textContent = now.toLocaleTimeString('pt-BR') + ' - ' + now.toLocaleDateString('pt-BR');
+    const clock = $('#clock');
+    if (clock) clock.textContent = new Date().toLocaleTimeString('pt-BR') + ' - ' + new Date().toLocaleDateString('pt-BR');
   }
 
   function simulateLiveData() {
-    // Oscilação dos valores
     state.energy = +(state.energy + (Math.random() * 2 - 1)).toFixed(1);
     state.water = +(state.water + (Math.random() * 4 - 2)).toFixed(0);
 
-    $('#val-energy').textContent = state.energy;
-    $('#val-water').textContent = state.water;
+    if ($('#val-energy')) $('#val-energy').textContent = state.energy;
+    if ($('#val-water')) $('#val-water').textContent = state.water;
 
     state.energyData.shift(); state.energyData.push(state.energy);
     state.waterData.shift(); state.waterData.push(state.water);
-
     renderChart();
   }
 
@@ -390,12 +433,12 @@
   window.toggleContrast = function (btn) {
     state.contrast = !state.contrast;
     btn.classList.toggle('on', state.contrast);
-    app.classList.toggle('high-contrast', state.contrast);
+    $('#app').classList.toggle('high-contrast', state.contrast);
   };
 
-  /* ---------- Helpers ---------- */
   function showToast(msg) {
     const toast = $('#toast');
+    if (!toast) return;
     toast.textContent = msg;
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3000);
@@ -406,10 +449,11 @@
     setInterval(updateClock, 1000);
     setInterval(simulateLiveData, 3000);
     updateClock();
-    renderFilterChips();
     renderAlerts();
     renderMural();
     renderChart();
+    renderTabelaRegistros();
+    atualizarKpisRegistros();
   }
 
   init();

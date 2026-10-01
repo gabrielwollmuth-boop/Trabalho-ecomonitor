@@ -43,16 +43,19 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19h16"/><rect x="6" y="10" width="3" height="7"/><rect x="11" y="6" width="3" height="11"/><rect x="16" y="13" width="3" height="4"/></svg>
         Relatórios
       </button>
+      <button data-view="registro-dados" onclick="setView('registro-dados')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Registrar dados
+      </button>
       <button data-view="config" onclick="setView('config')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.9 7.9 0 000-2l2-1.6-2-3.4-2.4.6a8 8 0 00-1.7-1L14.7 3h-4.6l-.6 2.6a8 8 0 00-1.7 1l-2.4-.6-2 3.4L5.4 11a7.9 7.9 0 000 2l-2 1.6 2 3.4 2.4-.6a8 8 0 001.7 1l.6 2.6h4.6l.6-2.6a8 8 0 001.7-1l2.4.6 2-3.4z"/></svg>
         Configurações
       </button>
-      
     </nav>
     <div class="side-foot">
       <div class="side-foot-top">
         <div class="side-avatar" id="sideAvatar">–</div>
-        <div><b id="sideUser">—</b><small>Linha 3 · Produção</small></div>
+        <div><b id="sideUser">Felipe</b><small>Linha 3 · Produção</small></div>
         <button id="logout" onclick="logout()">Sair</button>
       </div>
       <div class="lock-row">
@@ -224,6 +227,195 @@
       </div>
     </section>
 
+    <!-- VIEW: REGISTRAR DADOS (NOVA TELA) -->
+    <section class="view" data-view="registro-dados">
+      <div class="topbar">
+        <div>
+          <h1>Registrar Dados Operacionais</h1>
+          <p>Apontamento manual de medições, dados de produção e inspeções da Linha 3</p>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-primary" style="width:auto; padding:6px 14px; font-size:12px; background:var(--panel-2); color:var(--text); border:1px solid var(--line);" onclick="exportarCSV()">
+            📥 Exportar CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- KPIs RÁPIDOS DE REGISTRO -->
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-label">Lançamentos Hoje</span><span class="kpi-tag tag-ok">Ativo</span></div>
+          <div class="kpi-val mono" id="kpi-count-hoje">0</div>
+          <div class="kpi-delta">Registrados neste turno</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-label">Aprovação Pendente</span><span class="kpi-tag tag-warn" id="tag-pendente">0</span></div>
+          <div class="kpi-val mono" id="kpi-count-pendente">0</div>
+          <div class="kpi-delta">Requerem validação do CO</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-label">Média Energia Lançada</span></div>
+          <div class="kpi-val mono"><span id="kpi-media-energia">0.0</span> <span>kWh</span></div>
+          <div class="kpi-delta">Das últimas medições</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-label">Total Refugos</span><span class="kpi-tag tag-danger">Qualidade</span></div>
+          <div class="kpi-val mono"><span id="kpi-total-refugo">0</span> <span>pçs</span></div>
+          <div class="kpi-delta">Apontadas hoje</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <!-- FORMULÁRIO DE REGISTRO COM ABAS -->
+        <div class="panel">
+          <div class="panel-head" style="margin-bottom:14px; align-items:center;">
+            <h2>Novo Apontamento</h2>
+            <div class="tab-buttons">
+              <button class="tab-btn active" data-tab="sensor" onclick="setTab('sensor')">Sensores</button>
+              <button class="tab-btn" data-tab="producao" onclick="setTab('producao')">Produção</button>
+              <button class="tab-btn" data-tab="inspecao" onclick="setTab('inspecao')">Inspeção</button>
+            </div>
+          </div>
+
+          <!-- ABA 1: SENSORES -->
+          <form id="form-registro-sensor" class="tab-content active" onsubmit="salvarRegistroSensor(event)">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+              <div class="form-group" style="margin:0;">
+                <label>Setor / Equipamento</label>
+                <select id="reg-sensor-setor" class="input-field" required>
+                  <option value="Linha 3 - Prensa">Prensa 3</option>
+                  <option value="Linha 3 - Compressores">Compressores</option>
+                  <option value="Linha 3 - Caldeira">Caldeira Principal</option>
+                  <option value="Setor de Pintura">Setor de Pintura</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Energia (kWh)</label>
+                <input type="number" step="0.1" id="reg-sensor-energia" class="input-field" placeholder="Ex: 45.2" required>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+              <div class="form-group" style="margin:0;">
+                <label>Água (L/h)</label>
+                <input type="number" step="1" id="reg-sensor-agua" class="input-field" placeholder="Ex: 110" required>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Temperatura (°C)</label>
+                <input type="number" step="0.5" id="reg-sensor-temp" class="input-field" placeholder="Ex: 36.5" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Observação / Condição Operacional</label>
+              <textarea id="reg-sensor-obs" class="input-field" rows="2" placeholder="Descreva ruídos, vibrações ou anomalias percebidas..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary">Registrar Medição de Sensores</button>
+          </form>
+
+          <!-- ABA 2: PRODUÇÃO -->
+          <form id="form-registro-producao" class="tab-content" onsubmit="salvarRegistroProducao(event)">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+              <div class="form-group" style="margin:0;">
+                <label>Lote de Produção</label>
+                <input type="text" id="reg-prod-lote" class="input-field" placeholder="Ex: LOTE-2026-09" required>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Turno</label>
+                <select id="reg-prod-turno" class="input-field" required>
+                  <option value="1º turno">1º turno</option>
+                  <option value="2º turno">2º turno</option>
+                  <option value="3º turno">3º turno</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+              <div class="form-group" style="margin:0;">
+                <label>Peças Produzidas (Boas)</label>
+                <input type="number" id="reg-prod-boas" class="input-field" placeholder="Ex: 450" required>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Peças com Defeito (Refugo)</label>
+                <input type="number" id="reg-prod-refugo" class="input-field" placeholder="Ex: 12" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Motivo Refugo / Paradas</label>
+              <input type="text" id="reg-prod-motivo" class="input-field" placeholder="Ex: Rebarba excessiva / Ajuste mecânico">
+            </div>
+
+            <button type="submit" class="btn-primary">Apontar Dados de Produção</button>
+          </form>
+
+          <!-- ABA 3: INSPEÇÃO -->
+          <form id="form-registro-inspecao" class="tab-content" onsubmit="salvarRegistroInspecao(event)">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+              <div class="form-group" style="margin:0;">
+                <label>Equipamento Inspecionado</label>
+                <select id="reg-insp-equip" class="input-field" required>
+                  <option value="Painel Elétrico Central">Painel Elétrico Central</option>
+                  <option value="Bomba de Resfriamento A">Bomba de Resfriamento A</option>
+                  <option value="Motor do Compressor 2">Motor do Compressor 2</option>
+                  <option value="Válvula Reguladora de Pressão">Válvula Reguladora</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Status do Checklist</label>
+                <select id="reg-insp-status" class="input-field" required>
+                  <option value="Aprovado">✓ Aprovado (Sem anomalias)</option>
+                  <option value="Alerta">⚠️ Atenção (Requer acompanhamento)</option>
+                  <option value="Crítico">🚨 Crítico (Parada imediata)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Parecer do Técnico / Operador</label>
+              <textarea id="reg-insp-detalhes" class="input-field" rows="3" required placeholder="Relate o estado físico, óleos, ruídos e temperaturas medidas..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary">Salvar Inspeção Preventiva</button>
+          </form>
+        </div>
+
+        <!-- TABELA / HISTÓRICO DE DADOS REGISTRADOS -->
+        <div class="panel" style="display:flex; flex-direction:column;">
+          <div class="panel-head" style="margin-bottom:12px;">
+            <h2>Histórico de Registros</h2>
+            <div style="display:flex; gap:6px;">
+              <input type="text" id="search-registro" class="input-field" placeholder="Buscar..." style="padding:4px 8px; width:110px;" oninput="renderTabelaRegistros()">
+              <select id="filter-tipo-registro" class="input-field" style="width:auto; padding:4px 6px;" onchange="renderTabelaRegistros()">
+                <option value="todos">Todos</option>
+                <option value="sensor">Sensórica</option>
+                <option value="producao">Produção</option>
+                <option value="inspecao">Inspeção</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="flex:1; overflow-y:auto; max-height:360px;" class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Detalhes</th>
+                  <th>Autor / Hora</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-registros">
+                <!-- Inserido dinamicamente via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- VIEW: RELATÓRIOS -->
     <section class="view" data-view="relatorios">
       <div class="topbar"><div><h1>Relatórios</h1><p>Economia, alertas, sensores e histórico da Linha 3</p></div></div>
@@ -262,7 +454,7 @@
           <div class="a11y-row">
             <div><div class="a11y-label">Usuário ativo</div></div>
             <div class="profile-pick" id="profilePick">
-              <button onclick="setUser('Felipe')" data-user="Felipe">Felipe</button>
+              <button onclick="setUser('Felipe')" data-user="Felipe" class="active">Felipe</button>
               <button onclick="setUser('Gabriel')" data-user="Gabriel">Gabriel</button>
             </div>
           </div>
